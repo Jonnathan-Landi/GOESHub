@@ -1,0 +1,7 @@
+abi:
+  bucket: "noaa-goes19"
+  product: "ABI-L2-CMIPF"
+  channel: 13
+  satellite: "goes19"
+  latency_min: 15
+  min_bytes: 51200

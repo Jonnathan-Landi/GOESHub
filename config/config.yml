@@ -1,0 +1,46 @@
+ 
+
+paths:
+  raw_dir: "data/raw"
+  processed_dir: "data/processed"
+  public_dir: "data/public/cuenca_c13"
+  logs_dir: "logs"
+  cache_dir: "cache"
+  ffmpeg_path: "dependencies/ffmpeg/bin/ffmpeg.exe"
+
+naming:
+  frame_prefix: "goes19_c13"
+  mp4_latest_name: "cuenca_c13_latest_whatsapp.mp4"
+
+roi:
+  country_path: "assets/geodata/ecuador.gpkg"
+  cantons_path: "assets/geodata/cantons_azuay.gpkg"
+  province_path: "assets/geodata/azuay.gpkg"
+  buffer_path: "assets/geodata/buffer_zone.gpkg"
+  work_epsg: "EPSG:32717"
+  radius_km: 400 # Margen desde Azuay hacia cada extremo del ROI cuadrado
+
+processing:
+  res_m: 2000          # ~2 km (Resolución de Goes) en metros
+
+performance:
+  terra_threads: "auto"  # "auto" usa nucleos-1; o valor entero fijo (ej: 6)
+  download_workers: "auto" # workers para descargas HTTP en paralelo
+  process_workers: 2       # terra/NetCDF: evita saturacion de RAM y temporales
+  render_workers: "auto"   # workers para render TIF->PNG
+  max_auto_workers: 4       # limite de seguridad para evitar saturacion RAM/CPU
+  worker_blas_threads: 1    # hilos BLAS por worker (evita OpenBLAS OOM)
+
+publish:
+  n_frames: 19
+  fps: 2
+  ffmpeg_preset: "medium" # "slow" da mejor compresion pero tarda mas
+  ffmpeg_crf: 20           # +alto = mas rapido/menos peso, -bajo = mas calidad
+
+time:
+  tz_global: "UTC" # Segun como viene las imagenes GOES
+  tz_local: "America/Guayaquil" # para tiempo local. 
+
+
+
+
