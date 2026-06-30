@@ -1,0 +1,34 @@
+# ------------------------------
+# Datos crudos (raw)
+# ------------------------------
+data/raw/*
+!data/raw/
+
+# ------------------------------
+# Procesados intermedios (TIF)
+# ------------------------------
+data/processed/**/*.tif
+
+# ------------------------------
+# Salidas públicas / productos
+# ------------------------------
+data/public/*
+!data/public/
+
+# ------------------------------
+# Salidas públicas / gifs
+# ------------------------------
+data/out/gifs_WhatsApp
+# ==============================
+# Logs
+# ==============================
+logs/
+
+# ==============================
+# Cache incremental (JSON/JSONL)
+# ==============================
+cache/
+
+# Dependencias binarias locales
+dependencies/ffmpeg/
+
