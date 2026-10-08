@@ -18,6 +18,13 @@ load_backend_config <- function(
     if (is.null(path_value) || !nzchar(path_value)) {
       return(path_value)
     }
+    if (grepl("^([A-Za-z]:[\\\\/]|/)", path_value)) {
+      return(normalizePath(
+        path_value,
+        winslash = "/",
+        mustWork = FALSE
+      ))
+    }
     normalizePath(
       file.path(root_dir, path_value),
       winslash = "/",

@@ -44,6 +44,7 @@ make_latest_mp4_whatsapp <- function(
   # Copiar/renombrar a frame_0001.png ... frame_0012.png
   seq_names <- sprintf("frame_%04d.png", seq_along(files_last))
   seq_paths <- fs::path(tmp_dir, seq_names)
+  on.exit(unlink(tmp_dir, recursive = TRUE, force = TRUE), add = TRUE)
   ok <- file.copy(from = files_last, to = seq_paths, overwrite = TRUE)
   if (!all(ok)) {
     stop("Falló la copia/renombrado de algunos frames a la carpeta temporal.")
@@ -54,14 +55,41 @@ make_latest_mp4_whatsapp <- function(
   out_file_ff <- gsub("\\\\", "/", fs::path_abs(out_file))
 
   # 5) Verificar ffmpeg
-  ffmpeg_bin <- as.character(ffmpeg_bin)[[1]]
-  if (!nzchar(ffmpeg_bin) || !file.exists(ffmpeg_bin)) {
+  configured_ffmpeg <- if (length(ffmpeg_bin) > 0L) {
+    as.character(ffmpeg_bin)[[1]]
+  } else {
+    ""
+  }
+  configured_ffmpeg <- if (is.na(configured_ffmpeg)) "" else configured_ffmpeg
+  ffmpeg_candidates <- unique(c(
+    configured_ffmpeg,
+    Sys.which("ffmpeg")
+  ))
+  ffmpeg_candidates <- ffmpeg_candidates[
+    nzchar(ffmpeg_candidates) & file.exists(ffmpeg_candidates)
+  ]
+  if (length(ffmpeg_candidates) == 0L) {
     stop(
-      "No se encontro ffmpeg en la ruta esperada: ", ffmpeg_bin, "\n",
-      "Configure paths$ffmpeg_path con la ruta absoluta o relativa al ejecutable."
+      "No se encontró ffmpeg. Ruta configurada: ",
+      ifelse(nzchar(configured_ffmpeg), configured_ffmpeg, "<vacía>"),
+      ". Configure paths$ffmpeg_path con una ruta válida o agregue ffmpeg al PATH.",
+      call. = FALSE
     )
   }
-  ffmpeg_bin <- normalizePath(ffmpeg_bin, winslash = "/", mustWork = TRUE)
+  ffmpeg_bin <- normalizePath(ffmpeg_candidates[[1]], winslash = "/", mustWork = TRUE)
+
+  ffmpeg_check <- tryCatch(
+    system2(ffmpeg_bin, args = c("-hide_banner", "-version"), stdout = TRUE, stderr = TRUE),
+    error = function(e) e
+  )
+  if (inherits(ffmpeg_check, "error")) {
+    stop(
+      "Windows no pudo iniciar ffmpeg en '", ffmpeg_bin, "'. ",
+      "Verifique que el ejecutable no esté bloqueado y que sus dependencias estén disponibles. ",
+      "Detalle: ", conditionMessage(ffmpeg_check),
+      call. = FALSE
+    )
+  }
 
   # 6) Comando ffmpeg con image2
   # -framerate controla la cadencia de entrada
@@ -100,9 +128,19 @@ make_latest_mp4_whatsapp <- function(
   )
 
   res <- system2(ffmpeg_bin, args = args, stdout = TRUE, stderr = TRUE)
+  exit_status <- attr(res, "status", exact = TRUE)
 
-  if (!file.exists(out_file)) {
-    stop("FFmpeg no generó el MP4. Mensaje:\n", paste(res, collapse = "\n"))
+  if (!is.null(exit_status) || !file.exists(out_file)) {
+    status_text <- if (is.null(exit_status)) {
+      "salida no encontrada"
+    } else {
+      paste0("código de salida ", exit_status)
+    }
+    stop(
+      "FFmpeg falló (", status_text, "). Mensaje:\n",
+      paste(res, collapse = "\n"),
+      call. = FALSE
+    )
   }
 
   invisible(out_file)
